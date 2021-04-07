@@ -1,0 +1,79 @@
+#!/bin/bash
+#
+# Simple utility script for Arch Linux for checking if packages
+# installed from AUR have updates available.
+#
+# Author: Tomi Juntunen <erani@iki.fi>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+if ! which jq;
+then
+    echo "jq is needed for this script to run" >&2
+    exit 1
+fi
+
+AUR_API="https://aur.archlinux.org/rpc/?v=5&type=info"
+
+Args=""
+InstalledPackages=$(pacman -Q --foreign)
+
+# Go through installed foreign packages and construct HTTP query based on them
+while read -r Package;
+do
+    PackageName=${Package%%[[:space:]]*}
+    Args="${Args}&arg[]=$PackageName"
+done <<< "${InstalledPackages}"
+
+Response=$(curl --silent "${AUR_API}""${Args}")
+Results="$(jq -r .results <<< "${Response}")"
+
+Output=$"Package,Installed Version,Remote Version,Updates Available\n"
+
+while read -r Package;
+do
+    PackageName=${Package%%[[:space:]]*}
+    InstalledPackageVersion=${Package##*[[:space:]]}
+    RemotePackage=""
+    RemotePackageInfo=""
+
+    while read -r Remote;
+    do  
+        RemotePackage=$(jq -r .Name <<< "${Remote}")
+
+        [[ "${RemotePackage}" != "${PackageName}" ]] && continue
+
+        RemotePackageInfo="${Remote}"
+        break
+    done <<< "$(jq --compact-output '.[]' <<< "${Results}")"
+
+    if [[ -z ${RemotePackageInfo} ]];
+    then
+        echo "No package info found for package ${PackageName}" >&2
+    fi
+
+    RemotePackageVersion=$(jq -r .Version <<< "${RemotePackageInfo}")
+
+    # Check if the remote package is of a newer version than installed one and store results
+    # in the output string
+    if [[ "${RemotePackageVersion}" != "${InstalledPackageVersion}" ]];
+    then
+        Output=$"${Output}${PackageName},${InstalledPackageVersion},${RemotePackageVersion},!\n"
+    else
+        Output=$"${Output}${PackageName},${InstalledPackageVersion},${RemotePackageVersion},\n"
+    fi
+done <<< "${InstalledPackages}"
+
+# Finally, print the results of the package checks as a crude table.
+echo -e "${Output}" | column -t -s","
