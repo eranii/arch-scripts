@@ -61,6 +61,7 @@ do
     if [[ -z ${RemotePackageInfo} ]];
     then
         echo "No package info found for package ${PackageName}" >&2
+        continue
     fi
 
     RemotePackageVersion=$(jq --raw-output .Version <<< "${RemotePackageInfo}")
