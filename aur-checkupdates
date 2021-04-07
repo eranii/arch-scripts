@@ -32,7 +32,7 @@ InstalledPackages=$(pacman -Q --foreign)
 # Go through installed foreign packages and construct HTTP query based on them
 while read -r Package;
 do
-    PackageName=${Package%%[[:space:]]*}
+    PackageName=${Package%[[:space:]]*}
     Args="${Args}&arg[]=$PackageName"
 done <<< "${InstalledPackages}"
 
@@ -43,8 +43,8 @@ Output=$"Package,Installed Version,Remote Version,Updates Available\n"
 
 while read -r Package;
 do
-    PackageName=${Package%%[[:space:]]*}
-    InstalledPackageVersion=${Package##*[[:space:]]}
+    PackageName=${Package%[[:space:]]*}
+    InstalledPackageVersion=${Package#*[[:space:]]}
     RemotePackage=""
     RemotePackageInfo=""
 
