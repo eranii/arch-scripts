@@ -27,7 +27,7 @@ fi
 AUR_API="https://aur.archlinux.org/rpc/?v=5&type=info"
 
 Args=""
-InstalledPackages=$(pacman -Q --foreign)
+InstalledPackages=$(pacman --query --foreign)
 
 # Go through installed foreign packages and construct HTTP query based on them
 while read -r Package;
@@ -37,7 +37,7 @@ do
 done <<< "${InstalledPackages}"
 
 Response=$(curl --silent "${AUR_API}""${Args}")
-Results="$(jq -r .results <<< "${Response}")"
+Results="$(jq --raw-output .results <<< "${Response}")"
 
 Output=$"Package,Installed Version,Remote Version,Updates Available\n"
 
@@ -50,7 +50,7 @@ do
 
     while read -r Remote;
     do  
-        RemotePackage=$(jq -r .Name <<< "${Remote}")
+        RemotePackage=$(jq --raw-output .Name <<< "${Remote}")
 
         [[ "${RemotePackage}" != "${PackageName}" ]] && continue
 
@@ -63,7 +63,7 @@ do
         echo "No package info found for package ${PackageName}" >&2
     fi
 
-    RemotePackageVersion=$(jq -r .Version <<< "${RemotePackageInfo}")
+    RemotePackageVersion=$(jq --raw-output .Version <<< "${RemotePackageInfo}")
 
     # Check if the remote package is of a newer version than installed one and store results
     # in the output string
