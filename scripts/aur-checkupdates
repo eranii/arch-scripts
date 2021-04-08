@@ -1,7 +1,11 @@
 #!/bin/bash
 #
-# Simple utility script for Arch Linux for checking if packages
-# installed from AUR have updates available.
+# Check if foreign packages installed have updates available in AUR.
+#
+# Return codes:
+#   0 = Updates available
+#   1 = Something went wrong
+#   2 = No updates available
 #
 # Author: Tomi Juntunen <erani@iki.fi>
 #
@@ -39,7 +43,7 @@ done <<< "${InstalledPackages}"
 Response=$(curl --silent "${AUR_API}""${Args}")
 Results="$(jq --raw-output .results <<< "${Response}")"
 
-Output=$"Package,Installed Version,Remote Version,Updates Available\n"
+Output=$""
 
 while read -r Package;
 do
@@ -70,11 +74,20 @@ do
     # in the output string
     if [[ "${RemotePackageVersion}" != "${InstalledPackageVersion}" ]];
     then
-        Output=$"${Output}${PackageName},${InstalledPackageVersion},${RemotePackageVersion},!\n"
-    else
-        Output=$"${Output}${PackageName},${InstalledPackageVersion},${RemotePackageVersion},\n"
+        if [[ "${Output}" = "" ]];
+        then
+            Output=$"${Output}${PackageName} ${InstalledPackageVersion} -> ${RemotePackageVersion}"
+            continue
+        fi
+
+        Output=$"${Output}\n${PackageName} ${InstalledPackageVersion} -> ${RemotePackageVersion}"
     fi
 done <<< "${InstalledPackages}"
 
-# Finally, print the results of the package checks as a crude table.
-echo -e "${Output}" | column -t -s","
+if [[ -z "${Output}" ]];
+then
+    exit 2
+else
+    echo -e "${Output}"
+    exit 0
+fi
