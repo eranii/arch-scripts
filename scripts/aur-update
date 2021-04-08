@@ -116,7 +116,7 @@ fi
 
 check_update ${PackageName} ${InstalledPackageVersion}
 
-if [ "$?" = 2 ] ;
+if [ "$?" = "2" ] ;
 then
     echo "Package has no updates available"
     exit 2
@@ -136,7 +136,7 @@ fi
 
 echo "Fetching remote changes"
 
-if ! (cd "${WorkDir}"; git --git-dir="${WorkDir}"/.git --work-tree="${WorkDir}" fetch);
+if ! (cd "${WorkDir}"; git fetch);
 then
     echo "Fetching remote changes" >&2
     exit 1
@@ -144,7 +144,7 @@ fi
 
 echo "Reading remote diff"
 
-if ! (cd "${WorkDir}"; git --git-dir="${WorkDir}"/.git --work-tree="${WorkDir}" diff "${_GIT_DEFAULT_BRANCH}" origin/"${_GIT_DEFAULT_BRANCH}");
+if ! (cd "${WorkDir}"; git diff "${_GIT_DEFAULT_BRANCH}" origin/"${_GIT_DEFAULT_BRANCH}");
 then
     echo "Diffing changes failed" >&2
     exit 1
