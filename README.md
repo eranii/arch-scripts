@@ -7,6 +7,7 @@ installation(s).
 foreign (AUR) packages. Runs without root.
 * `scripts/aur-update`: Update a single package. A wrapper script for
 running `git` and `makepkg` commands.
+* `scripts/checkupdates-notify-send`: Check available pacman package updates script and send a notification if updates are available.
 
 ## Dependencies
 
