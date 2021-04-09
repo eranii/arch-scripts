@@ -30,7 +30,7 @@ then
     exit 1
 fi
 
-checkupdates
+checkupdates > /dev/null
 
 ReturnCode=$?
 
