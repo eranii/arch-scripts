@@ -11,6 +11,8 @@ running `git` and `makepkg` commands.
 ## Dependencies
 
 * `jq`
+* `pacman-contrib`
+* `libnotify`
 
 ## Installing
 
@@ -50,6 +52,49 @@ additional command line parameters to `makepkg`.
 
 ```bash
 $ aur-update -ri spotify
+```
+
+### checkupdates-notify-send
+
+Running the script runs `checkupdates` script, and in case
+updates are available, it simply sends a desktop notification
+using [`notify-send`](https://wiki.archlinux.org/index.php/Desktop_notifications#Bash).
+
+#### Scheduling Using systemd
+
+```
+~/.config/systemd/user/checkupdates-notify.service
+---
+[Unit]
+Description=Check and notify on available package updates
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/checkupdates-notify-send
+```
+
+
+```
+~/.config/systemd/user/checkupdates-notify.timer
+---
+[Unit]
+Description=Run checkupdates-notify service once per x hours
+
+[Timer]
+# Run 5 minutes after booting up
+OnBootSec=5min
+OnUnitActiveSec=<hours>h
+Unit=checkupdates-notify.service
+
+[Install]
+WantedBy=timers.target
+```
+
+After this, enable service by running
+
+```bash
+systemctl enable --user checkupdates-notify.timer
+systemctl start --user checkupdates-notify.timer
 ```
 
 ## Known Limitations
