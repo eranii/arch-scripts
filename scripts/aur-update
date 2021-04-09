@@ -45,7 +45,7 @@ function check_update {
 
     echo "Installed version: $2, remote version: ${RemoteVersion}"
 
-    if [[ "${RemoteVersion}" != $2 ]];
+    if [[ "${RemoteVersion}" != "$2" ]];
     then
         return 0
     fi
@@ -100,8 +100,8 @@ done
 shift "$((OPTIND-1))"
 
 PackageName=$1
-InstalledPackage=$(pacman --query --foreign | grep ${PackageName})
-InstalledPackageVersion=$(cut -d ' ' -f 2 <<< ${InstalledPackage})
+InstalledPackage=$(pacman --query --foreign | grep "${PackageName}")
+InstalledPackageVersion=$(cut -d ' ' -f 2 <<< "${InstalledPackage}")
 
 if [[ -z "${PackageName}" ]];
 then
@@ -114,7 +114,7 @@ then
     exit 1
 fi
 
-check_update ${PackageName} ${InstalledPackageVersion}
+check_update "${PackageName}" "${InstalledPackageVersion}"
 
 if [ "$?" = "2" ] ;
 then
@@ -124,11 +124,17 @@ fi
 
 WorkDir="${AUR_PACKAGES_PATH}"/"${PackageName}"
 
-_GIT_DEFAULT_BRANCH=$(cd "${WorkDir}"; git remote show origin | grep "HEAD branch" | cut -d: -f2 | tr -d ' ')
+_GIT_DEFAULT_BRANCH=$(cd "${WorkDir}" || exit 1; git remote show origin | grep "HEAD branch" | cut -d: -f2 | tr -d ' ')
+
+if [[ "${_GIT_DEFAULT_BRANCH}" = "" ]];
+then
+    echo "Could not get default branch for package ${PackageName} repository" >&2
+    exit 1
+fi
 
 echo "Checking out to default branch in repository"
 
-if ! (cd "${WorkDir}"; git checkout "${_GIT_DEFAULT_BRANCH}");
+if ! (cd "${WorkDir}" || exit 1; git checkout "${_GIT_DEFAULT_BRANCH}");
 then
     echo "Checkout to default branch failed" >&2
     exit 1
@@ -136,7 +142,7 @@ fi
 
 echo "Fetching remote changes"
 
-if ! (cd "${WorkDir}"; git fetch);
+if ! (cd "${WorkDir}" || exit 1; git fetch);
 then
     echo "Fetching remote changes" >&2
     exit 1
@@ -144,7 +150,7 @@ fi
 
 echo "Reading remote diff"
 
-if ! (cd "${WorkDir}"; git diff "${_GIT_DEFAULT_BRANCH}" origin/"${_GIT_DEFAULT_BRANCH}");
+if ! (cd "${WorkDir}" || exit 1; git diff "${_GIT_DEFAULT_BRANCH}" origin/"${_GIT_DEFAULT_BRANCH}");
 then
     echo "Diffing changes failed" >&2
     exit 1
@@ -162,9 +168,18 @@ then
 elif [[ "${Answer}" = "y" ]];
 then
     echo "Pulling remote changes"
-    (cd "${WorkDir}"; git pull)
+    if ! (cd "${WorkDir}" || exit 1; git pull);
+    then
+        echo "Failure in pulling updates" >&2
+        exit 1
+    fi
+
     echo "Running makepkg and installing update"
-    (cd "${WorkDir}"; makepkg "${MAKEPKG_OPTS}")
+    if ! (cd "${WorkDir}" || exit 1; makepkg "${MAKEPKG_OPTS}");
+    then
+        echo "Failed installing updates" >&2
+        exit 1
+    fi
 else
     echo "Update cancelled" >&2
     exit 1
