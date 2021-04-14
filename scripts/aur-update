@@ -144,7 +144,7 @@ echo "Fetching remote changes"
 
 if ! (cd "${WorkDir}" || exit 1; git fetch);
 then
-    echo "Fetching remote changes" >&2
+    echo "Fetching remote changes failed" >&2
     exit 1
 fi
 
