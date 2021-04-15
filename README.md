@@ -14,6 +14,8 @@ running `git` and `makepkg` commands.
 * `jq`
 * `pacman-contrib`
 * `libnotify`
+* `git`
+* `curl`
 
 ## Installing
 

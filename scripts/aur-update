@@ -52,11 +52,16 @@ function check_update {
     return 2
 }
 
-if ! command -v jq > /dev/null;
-then
-    echo "jq is needed for this script to run" >&2
-    exit 1
-fi
+Dependencies=("jq" "git" "curl")
+
+for Dep in "${Dependencies[@]}";
+do
+    if ! command -v "${Dep}" > /dev/null;
+    then
+        echo "${Dep} is needed for this script to run" >&2
+        exit 1
+    fi
+done
 
 if [[ -z "${AUR_PACKAGES_PATH}" ]];
 then
@@ -147,8 +152,6 @@ then
     echo "Fetching remote changes failed" >&2
     exit 1
 fi
-
-echo "Reading remote diff"
 
 if ! (cd "${WorkDir}" || exit 1; git diff "${_GIT_DEFAULT_BRANCH}" origin/"${_GIT_DEFAULT_BRANCH}");
 then
