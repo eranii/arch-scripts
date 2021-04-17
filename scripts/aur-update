@@ -84,16 +84,16 @@ while getopts "risch" Opt; do
             exit 0
             ;;
         r)
-            MAKEPKG_OPTS="${MAKEPKG_OPTS}-r "
+            MAKEPKG_OPTS="${MAKEPKG_OPTS}r"
             ;;
         i)
-            MAKEPKG_OPTS="${MAKEPKG_OPTS}-i "
+            MAKEPKG_OPTS="${MAKEPKG_OPTS}i"
             ;;
         s)
-            MAKEPKG_OPTS="${MAKEPKG_OPTS}-s "
+            MAKEPKG_OPTS="${MAKEPKG_OPTS}s"
             ;;
         c)
-            MAKEPKG_OPTS="${MAKEPKG_OPTS}-c "
+            MAKEPKG_OPTS="${MAKEPKG_OPTS}c"
             ;;
         *)
             print_usage
@@ -177,8 +177,8 @@ then
         exit 1
     fi
 
-    echo "Running makepkg and installing update"
-    if ! (cd "${WorkDir}" || exit 1; makepkg "${MAKEPKG_OPTS}");
+    echo "Running makepkg"
+    if ! (cd "${WorkDir}" || exit 1; makepkg "-${MAKEPKG_OPTS}");
     then
         echo "Failed installing updates" >&2
         exit 1
